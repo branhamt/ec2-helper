@@ -59,7 +59,7 @@ The script has a little brittleness based on your ssh config.
 
 It relies on a grep command that expects Hostname to be in a 4 line block afterthe Host line in your ~/.ssh/config.
 
-This will succeed (highlighted lines are grepped):
+This will succeed:
 
 ```
 Host somehost
@@ -71,7 +71,7 @@ Host somehost
     UserKnownHostsFile ~/.ssh/known_hosts_test
 ```
 
-This will fail (highlighted lines are grepped):
+This will fail:
 
 ```
 Host somehost

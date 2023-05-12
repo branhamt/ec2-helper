@@ -2,6 +2,12 @@
 
 Start and stop an EC2 instance by name and update ~/.ssh/config Host entry.
 
+## What is this for?
+
+When an EC2 instance with a public IP address is shut down, the IP address changes once it is booted again. I wanted to be able to reconfigure my ~/.ssh/config with the new IP. [I did not want to use AWS ENI or Elastic IP](https://www.swe-devops.com/posts/manage-ec2-ssh-config-bash/).
+
+Additionally, I'm using these scripts with EC2 instances that shut down on inactivity. These scripts are a quick way to start or stop an instance and update the IP address on a reboot.
+
 ## Commands
 
 **Start an EC2 instance.**

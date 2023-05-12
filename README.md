@@ -52,3 +52,33 @@ This will:
 
 - Put /path/to/ec2-helper in your PATH so you can call it from anywhere.
 - Source the autocompletion script to autocomplete host names from your ~/.ssh/config.
+
+## Caveats
+
+The script has a little brittleness based on your ssh config.
+
+It relies on a grep command that expects Hostname to be in a 4 line block afterthe Host line in your ~/.ssh/config.
+
+This will succeed (highlighted lines are grepped):
+
+```bash {hl_lines=2-5}
+Host somehost
+    IdentityFile ~/.ssh/somehost.pem
+    IdentitiesOnly yes
+    User ubuntu
+    Hostname some.ip.addr.ess
+    StrictHostKeyChecking no
+    UserKnownHostsFile ~/.ssh/known_hosts_test
+```
+
+This will fail (highlighted lines are grepped):
+
+```bash {hl_lines=2-5}
+Host somehost
+    IdentityFile ~/.ssh/somehost.pem
+    IdentitiesOnly yes
+    User ubuntu
+    StrictHostKeyChecking no
+    UserKnownHostsFile ~/.ssh/known_hosts_test
+    Hostname some.ip.addr.ess
+```

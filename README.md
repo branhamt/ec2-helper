@@ -61,7 +61,7 @@ It relies on a grep command that expects Hostname to be in a 4 line block aftert
 
 This will succeed (highlighted lines are grepped):
 
-```bash {hl_lines=2-5}
+```
 Host somehost
     IdentityFile ~/.ssh/somehost.pem
     IdentitiesOnly yes
@@ -73,7 +73,7 @@ Host somehost
 
 This will fail (highlighted lines are grepped):
 
-```bash {hl_lines=2-5}
+```
 Host somehost
     IdentityFile ~/.ssh/somehost.pem
     IdentitiesOnly yes

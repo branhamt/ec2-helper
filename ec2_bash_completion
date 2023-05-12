@@ -1,0 +1,25 @@
+# Adds tab-completion of SSH config Hosts to the ec2 command.
+#
+# Installing
+# ==========
+#
+# Install by putting this line in your .bash_profile or .bashrc.
+#
+#     . ~/path/to/ec2_bash_completion
+#
+# Then reload with `. ~/.bashrc`.
+
+_ec2_hosts()
+{
+    # Get a list of hostnames from ~/.ssh/config
+    local hosts=$(grep -E "^Host\s+" ~/.ssh/config | awk '{print $2}')
+
+    # Get the current word being completed
+    local current_word="${COMP_WORDS[COMP_CWORD]}"
+
+    # Set the list of possible completions to the list of hosts
+    COMPREPLY=($(compgen -W "${hosts}" -- "${current_word}"))
+}
+
+# Register the custom completion function for the "ec2" command
+complete -F _ec2_hosts ec2

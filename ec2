@@ -1,0 +1,73 @@
+#!/bin/bash
+# Start and stop and EC2 instance.
+# If started, replace the old IP address of the instance with the new one in ~/.ssh/config.
+
+# Parse command-line arguments
+if [ "$1" == "start" ]; then
+  action="start"
+elif [ "$1" == "stop" ]; then
+  action="stop"
+else
+  echo "Usage: $0 [start|stop] <instance-name>"
+  exit 1
+fi
+
+sleep_seconds=5
+
+# Get the instance name from the command line
+name="$2"
+
+instance_id=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=$name" --query "Reservations[].Instances[].InstanceId" --output=text)
+
+# Check if the instance is already running or stopped
+status=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=$name" --query "Reservations[*].Instances[*].State.Name" --output text)
+if [ "$status" == "running" ] && [ "$action" == "start" ]; then
+  echo "Instance $name ($instance_id) is already running"
+  exit 0
+elif [ "$status" == "stopped" ] && [ "$action" == "stop" ]; then
+  echo "Instance $name ($instance_id) is already stopped"
+  exit 0
+fi
+
+# Start or stop the instance
+if [ "$action" == "start" ]; then
+  aws ec2 start-instances --no-cli-pager --instance-ids $(aws ec2 describe-instances --filters "Name=tag:Name,Values=$name" --query "Reservations[*].Instances[*].InstanceId" --output text)
+elif [ "$action" == "stop" ]; then
+  aws ec2 stop-instances --no-cli-pager --instance-ids $(aws ec2 describe-instances --filters "Name=tag:Name,Values=$name" --query "Reservations[*].Instances[*].InstanceId" --output text)
+fi
+
+# Wait for the instance to start or stop
+# Polls every $sleep_seconds seconds
+while true; do
+  status=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=$name" --query "Reservations[*].Instances[*].State.Name" --output text)
+  if [ "$action" == "start" ] && [ "$status" == "running" ]; then
+    echo "Instance $name ($instance_id) started"
+    break
+  elif [ "$action" == "stop" ] && [ "$status" == "stopped" ]; then
+    echo "Instance $name ($instance_id) stopped"
+    break
+  fi
+  echo Waiting...
+  sleep $sleep_seconds
+done
+
+# Update SSH config file with new IP address
+if [ "$action" == "start" ]; then
+  # Get instance IP address
+  instance_ip=$(aws ec2 describe-instances --instance-ids "$instance_id" --query "Reservations[].Instances[].PublicIpAddress" --output=text)
+
+  # Find the SSH config entry for the instance by name
+  # This is brittle! Change if Ansible ec2 role SSH changes.
+  config=$(grep -A4 -w "Host $name\$" ~/.ssh/config)
+
+  # Get the current hostname for the SSH config entry
+  old_hostname=$(echo "$config" | grep Hostname | awk '{print $2}')
+
+  # Replace the old hostname with the new IP address in the SSH config file
+  # Change every matching IP in the file
+  sed -i "s/$old_hostname/$instance_ip/g" ~/.ssh/config
+
+  echo "Instance started with ID $instance_id and IP address $instance_ip"
+fi
+
+exit 0
